@@ -1,7 +1,8 @@
 #!usr/bin/env python
 import RPi.GPIO as GPIO
 from time import sleep
-
+import picamera
+import time
 GPIO.setmode(GPIO.BOARD)
 
 forward1 = 18
@@ -66,11 +67,19 @@ class Driver(object):
         
         GPIO.output(pwm1, LOW)
         GPIO.output(pwm2, LOW)
-        
+   
+    def cleanup(self):
+        GPIO.cleanup()
 
 if __name__ == "__main__":
     d = Driver()
-    d.forward(2)
-    d.left_motor_high_forward(2)
-    d.right_motor_high_forward(2)
-    GPIO.cleanup()
+    cam = picamera.PiCamera()
+    sleep(0.5)
+    cam.vflip=True
+    cam.hflip=True
+    for i in range(25):
+        cam.capture("/home/pi/bb23/images/%s_%s.jpg" % (time.time(), i))
+        d.forward(0.5)
+        d.right_motor_high_forward(0.05*i)
+    d.cleanup()
+

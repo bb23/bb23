@@ -1,6 +1,6 @@
 import numpy as np
 import cv2
-from matplotlib import pyplot as plt
+#from matplotlib import pyplot as plt
 
 red_color = ([5, 5, 50], [60, 60, 255])
 orange_color = ([30,120,230], [100, 200, 255])
