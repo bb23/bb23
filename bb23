@@ -1,0 +1,16 @@
+#!/bin/bash
+source /lib/lsb/init-functions
+case "$1" in
+    start)
+		start_daemon "python /home/pi/bb23/drive.py" -p /var/run/bb23.pid
+		;;
+	stop)
+		killproc -p /var/run/bb23.pid
+		;;
+	*)
+		echo "Usage: /etc/init.d/bb23 start|stop"
+		exit 1
+		;;
+esac
+
+exit 0
