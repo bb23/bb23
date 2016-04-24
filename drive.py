@@ -10,6 +10,7 @@ import time
 import cv2
 import numpy as np
 import picamera
+import picamera.array
 # from random_walker import RandomWalker
 
 from bbCamera import BbCamera
@@ -25,21 +26,23 @@ VERBOTTEN_METHODS = set("cleanup")
 
 
 def main():
-    logging.basicConfig(filename='example.log', level=logging.DEBUG)
+    logging.basicConfig(filename='/home/pi/bb23/example.log', level=logging.DEBUG)
     start_timestamp = datetime.datetime.now().strftime("%Y%m%d_%H-%M-%S.%f")
     image_path = "/home/pi/bb23/images/%s_%s.jpg"
     try:
         cam = BbCamera()
         # cam.start_recording(image_path % (start_timestamp))
-        cam.start_preview()
+        # cam.start_preview()
         time.sleep(2)
 
         # Initialize drive controller and get methods sans Verbotten
         drive_controller = driver.Driver()
-        methods = set(inspect.getmembers(drive_controller,
-                                         predicate=inspect.ismethod))
-        methods -= VERBOTTEN_METHODS
+        logging.info("\n\nDriver enabled")
 
+        #methods = set(inspect.getmembers(drive_controller,
+        #                                 predicate=inspect.ismethod))
+        #methods -= VERBOTTEN_METHODS
+        methods = ["forward", "left_motor_high_forward", "right_motor_high_forward"]
         loopery = True
         while loopery:
             # current_time = datetime.datetime.now().strftime("%Y%m%d_%H-%M-%S.%f")
@@ -61,13 +64,15 @@ def main():
             (_, cnts, _) = cv2.findContours(color_mask.copy(),
                                             cv2.RETR_EXTERNAL,
                                             cv2.CHAIN_APPROX_SIMPLE)
+            
             if len(cnts) == 0:
                 # Jitter'd random walk.
                 print "==================================="
                 print "     Random walk mode enabled      "
                 print "==================================="
                 random_method = random.choice(methods)
-                getattr(drive_controller, random_method(TICKLE))
+                getattr(drive_controller, random_method)(TICKLE)
+                continue
 
             c = max(cnts, key=cv2.contourArea)
 
@@ -76,10 +81,13 @@ def main():
             approx = cv2.approxPolyDP(c, 0.05 * peri, True)
 
             M = cv2.moments(approx)
-
-            c_x = int(M['m10']/M['m00'])
-            c_y = int(M['m01']/M['m00'])
-
+            try:
+                c_x = int(M['m10']/M['m00'])
+                c_y = int(M['m01']/M['m00'])
+            except ZeroDivisionError:
+                logging.info("dividing by zero")
+                continue
+                
             if c_x < center_x_low:
                 drive_controller.left_motor_high_forward(TICKLE/2)
             elif c_x > center_x_high:
@@ -89,8 +97,9 @@ def main():
 
     except Exception as e:
         error_timestamp = datetime.datetime.now().strftime("%Y%m%d_%H:%M:%S.%f")
+        import traceback
         logging.debug(error_timestamp + ": " + str(e))
-
+        logging.debug(traceback.print_exc(file=open('/home/pi/bb23/traceback.log','a')))
 
 if __name__ == "__main__":
     main()
