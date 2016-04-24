@@ -1,97 +1,96 @@
 #!usr/bin/env python
-import logging
-import RPi.GPIO as GPIO
-from time import sleep
+import inspect
+import io
 import datetime
-from bbCamera import bbCamera
-GPIO.setmode(GPIO.BOARD)
-
-forward1 = 18
-backward1 = 16
-pwm1 = 12
+import logging
+import random
+import time
 
 
-forward2 = 15
-backward2 = 13
-pwm2 = 11
+import cv2
+import numpy as np
+import picamera
+# from random_walker import RandomWalker
 
-HIGH = GPIO.HIGH
-LOW = GPIO.LOW
-OUT = GPIO.OUT
+from bbCamera import BbCamera
+import driver
 
 
-class Driver(object):
-    def __init__(self):
-        # Initialize motor1
-        GPIO.setup(forward1, OUT)
-        GPIO.setup(backward1, OUT)
-        GPIO.setup(pwm1, OUT)
+TICKLE = 0.1
 
-        # Initialize motor2
+LOWER = np.array([0, 70, 120])
+UPPER = np.array([30, 160, 255])
 
-        GPIO.setup(forward2, OUT)
-        GPIO.setup(backward2, OUT)
-        GPIO.setup(pwm2, OUT)
-        print "Initialized Driver Object."
+VERBOTTEN_METHODS = set("cleanup")
 
-    def right_motor_high_forward(self, seconds):
-        print "Right motor engaged."
-        GPIO.output(forward1, HIGH)
-        GPIO.output(backward1, LOW)
-        GPIO.output(pwm1, HIGH)
 
-        sleep(seconds)
-        GPIO.output(pwm1, LOW)
-        print "Ran for %s seconds. " % seconds
-        print "Right motor disengaged."
+def main():
+    logging.basicConfig(filename='example.log', level=logging.DEBUG)
+    start_timestamp = datetime.datetime.now().strftime("%Y%m%d_%H-%M-%S.%f")
+    image_path = "/home/pi/bb23/images/%s_%s.jpg"
+    try:
+        cam = BbCamera()
+        # cam.start_recording(image_path % (start_timestamp))
+        cam.start_preview()
+        time.sleep(2)
 
-    def left_motor_high_forward(self, seconds):
-        print "Left motor engaged."
-        GPIO.output(forward2, HIGH)
-        GPIO.output(backward2, LOW)
-        GPIO.output(pwm2, HIGH)
+        # Initialize drive controller and get methods sans Verbotten
+        drive_controller = driver.Driver()
+        methods = set(inspect.getmembers(drive_controller,
+                                         predicate=inspect.ismethod))
+        methods -= VERBOTTEN_METHODS
 
-        sleep(seconds)
-        GPIO.output(pwm2, LOW)
-        print "Ran for %s seconds. " % seconds
-        print "Left motor disengaged."
+        loopery = True
+        while loopery:
+            # current_time = datetime.datetime.now().strftime("%Y%m%d_%H-%M-%S.%f")
+            # CAPTURE IMAGE
+            with picamera.array.PiRGBArray(cam) as stream:
+                cam.capture(stream, 'bgr')
+                image = stream.array
 
-    def forward(self, seconds):
-        print "Forward engaged."
-        GPIO.output(forward1, HIGH)
-        GPIO.output(forward2, HIGH)
+            # GRAB IMAGE ATTRIBUTES
+            height, width, channels = image.shape
+            # assign left right center region
+            center_x_low = width / 2 - 100
+            center_x_high = width / 2 + 100
 
-        GPIO.output(backward1, LOW)
-        GPIO.output(backward2, LOW)
+            # BUILD COLOR MASK WITH CONSTANTS SET FOR ~ORANGE
+            color_mask = cv2.inRange(image, LOWER, UPPER)
 
-        GPIO.output(pwm1, HIGH)
-        GPIO.output(pwm2, HIGH)
+            # find contours in the masked image and keep the largest one
+            (_, cnts, _) = cv2.findContours(color_mask.copy(),
+                                            cv2.RETR_EXTERNAL,
+                                            cv2.CHAIN_APPROX_SIMPLE)
+            if len(cnts) == 0:
+                # Jitter'd random walk.
+                print "==================================="
+                print "     Random walk mode enabled      "
+                print "==================================="
+                random_method = random.choice(methods)
+                getattr(drive_controller, random_method(TICKLE))
 
-        sleep(seconds)
-        print "Ran for %s seconds" % seconds
-        GPIO.output(pwm1, LOW)
-        GPIO.output(pwm2, LOW)
-        print "Forward disengaged."
+            c = max(cnts, key=cv2.contourArea)
 
-    def cleanup(self):
-        GPIO.cleanup()
+            # approximate the contour
+            peri = cv2.arcLength(c, True)
+            approx = cv2.approxPolyDP(c, 0.05 * peri, True)
+
+            M = cv2.moments(approx)
+
+            c_x = int(M['m10']/M['m00'])
+            c_y = int(M['m01']/M['m00'])
+
+            if c_x < center_x_low:
+                drive_controller.left_motor_high_forward(TICKLE/2)
+            elif c_x > center_x_high:
+                drive_controller.right_motor_high_forward(TICKLE/2)
+            else:
+                drive_controller.forward(TICKLE/2)
+
+    except Exception as e:
+        error_timestamp = datetime.datetime.now().strftime("%Y%m%d_%H:%M:%S.%f")
+        logging.debug(error_timestamp + ": " + str(e))
+
 
 if __name__ == "__main__":
-    logging.basicConfig(filename='example.log', level=logging.DEBUG)
-    d = Driver()
-    cam = bbCamera()
-    sleep(1)
-    try:
-        for i in range(20):
-            timestamp = datetime.datetime.now().strftime("%Y%m%d_%H-%M-%S.%f")
-            cam.capture("/home/pi/bb23/images/%s_%s.jpg" % (timestamp, i))
-            d.forward(0.5)
-            sleep(0.2)
-            d.right_motor_high_forward(0.1)
-            sleep(0.5)
-        d.cleanup()
-    except Exception as e:
-        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H:%M:%S.%f")
-        logging.debug(timestamp + ": " + str(e))
-    finally:
-        d.cleanup()
+    main()
