@@ -7,6 +7,7 @@ from picamera import PiCamera
 class BbCamera(PiCamera):
 
     def __init__(self):
-        super(PiCamera, self).__init__()
+        PiCamera.__init__(self)
         self.hflip = self.vflip = True
         time.sleep(2)
+
