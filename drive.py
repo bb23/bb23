@@ -2,8 +2,8 @@
 import logging
 import RPi.GPIO as GPIO
 from time import sleep
-import picamera
 import datetime
+from bbCamera import bbCamera
 GPIO.setmode(GPIO.BOARD)
 
 forward1 = 18
@@ -39,7 +39,7 @@ class Driver(object):
         GPIO.output(forward1, HIGH)
         GPIO.output(backward1, LOW)
         GPIO.output(pwm1, HIGH)
-        
+
         sleep(seconds)
         GPIO.output(pwm1, LOW)
         print "Ran for %s seconds. " % seconds
@@ -50,7 +50,7 @@ class Driver(object):
         GPIO.output(forward2, HIGH)
         GPIO.output(backward2, LOW)
         GPIO.output(pwm2, HIGH)
-        
+
         sleep(seconds)
         GPIO.output(pwm2, LOW)
         print "Ran for %s seconds. " % seconds
@@ -77,12 +77,10 @@ class Driver(object):
         GPIO.cleanup()
 
 if __name__ == "__main__":
-    logging.basicConfig(filename='example.log',level=logging.DEBUG)
+    logging.basicConfig(filename='example.log', level=logging.DEBUG)
     d = Driver()
-    cam = picamera.PiCamera()
+    cam = bbCamera()
     sleep(1)
-    cam.vflip=True
-    cam.hflip=True
     try:
         for i in range(20):
             timestamp = datetime.datetime.now().strftime("%Y%m%d_%H-%M-%S.%f")
@@ -91,7 +89,6 @@ if __name__ == "__main__":
             sleep(0.2)
             d.right_motor_high_forward(0.1)
             sleep(0.5)
-            failhard()
         d.cleanup()
     except Exception as e:
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H:%M:%S.%f")
