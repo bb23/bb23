@@ -1,5 +1,5 @@
 import socket
-
+from time import sleep
 
 TCP_IP = '127.0.0.1'
 TCP_PORT = 9101
@@ -16,8 +16,11 @@ def send_command(command):
 
 
 send_command("forward")
+sleep(3)
 send_command("turn_right")
+sleep(3)
 send_command("turn_left")
+sleep(3)
 send_command("stop")
 
 
