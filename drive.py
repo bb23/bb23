@@ -17,7 +17,7 @@ from bbCamera import BbCamera
 import driver
 
 
-TICKLE = 0.1
+TICKLE = 0.2
 
 LOWER = np.array([0, 70, 120])
 UPPER = np.array([30, 160, 255])
@@ -89,9 +89,9 @@ def main():
                 continue
                 
             if c_x < center_x_low:
-                drive_controller.left_motor_high_forward(TICKLE/2)
-            elif c_x > center_x_high:
                 drive_controller.right_motor_high_forward(TICKLE/2)
+            elif c_x > center_x_high:
+                drive_controller.left_motor_high_forward(TICKLE/2)
             else:
                 drive_controller.forward(TICKLE/2)
 
