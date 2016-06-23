@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Simple unix socket daemon (based on tornado) to execute myGPIO commands.
+Simple unix socket daemon (based on tornado) to execute GPIO commands.
 Comes with a lot of goodies, such as user-defined commands, yaml-based
 configuration file, scheduled (deferred) tasks, ...
 
@@ -98,12 +98,12 @@ def daemon_reload():
         sock.close()
 
 
-class myGPIODaemon(Daemon):
+class GPIODaemon(Daemon):
     def run(self):
         try:
             logger.info("Starting daemon")
             logger.info(dir(gpiomanager))
-            myGPIO = gpiomanager.rmyGPIO(logger=logger, configfile=CONFIG_FILE)
+            myGPIO = gpiomanager.rGPIO(logger=logger, configfile=CONFIG_FILE)
             gpio_server = GPIOServer(myGPIO)
             gpio_server.listen(PORT)
 
@@ -125,21 +125,21 @@ class myGPIODaemon(Daemon):
                 logger.exception(e)
 
             finally:
-                logger.info("myGPIODaemon stopped")
+                logger.info("GPIODaemon stopped")
 
 
 # Console start
 if __name__ == '__main__':
     # Prepare help and options
     usage = """usage: %prog start|stop|restart|reload"""
-    desc="""myGPIO-Daemon is little program to help dealing with/programming the
-myGPIO ports on the Raspberry pi via a socket interface (eg. telnet). The
+    desc="""GPIO-Daemon is little program to help dealing with/programming the
+GPIO ports on the Raspberry pi via a socket interface (eg. telnet). The
 daemon listens on port %s for TCP connections.""" % PORT
     parser = OptionParser(usage=usage, description=desc)
     (options, args) = parser.parse_args()
 
     # Setup daemon
-    daemon = myGPIODaemon(PIDFILE)
+    daemon = GPIODaemon(PIDFILE)
 
     # Process startup argument
     if not args:
@@ -147,7 +147,7 @@ daemon listens on port %s for TCP connections.""" % PORT
 
     elif "start" == args[0]:
         daemon.start()
-        print "myGPIO daemon started."
+        print "GPIO daemon started."
 
     elif "stop" == args[0]:
         daemon.stop()
