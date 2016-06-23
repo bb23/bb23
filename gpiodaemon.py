@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Simple unix socket daemon (based on tornado) to execute GPIO commands.
+Simple unix socket daemon (based on tornado) to execute myGPIO commands.
 Comes with a lot of goodies, such as user-defined commands, yaml-based
 configuration file, scheduled (deferred) tasks, ...
 
@@ -50,7 +50,7 @@ signal.signal(signal.SIGINT, signal_handler)
 class TCPConnection(object):
     def __init__(self, gpio, stream, address):
         logger.debug('- new connection from %s' % repr(address))
-        self.GPIO = gpio
+        self.myGPIO = gpio
         self.stream = stream
         self.address = address
         self.stream.set_close_callback(self._on_close)
@@ -63,7 +63,7 @@ class TCPConnection(object):
             return
 
         # Process input
-        response = self.GPIO.handle_cmd(data)
+        response = self.myGPIO.handle_cmd(data)
         logger.debug(response)
         if response:
             self.stream.write("%s\n" % response.strip())
@@ -81,11 +81,11 @@ class TCPConnection(object):
 # The main server class
 class GPIOServer(TCPServer):
     def __init__(self, gpio, io_loop=None, ssl_options=None, **kwargs):
-        self.GPIO = gpio
+        self.myGPIO = gpio
         TCPServer.__init__(self, io_loop=io_loop, ssl_options=ssl_options, **kwargs)
 
     def handle_stream(self, stream, address):
-        TCPConnection(self.GPIO, stream, address)
+        TCPConnection(self.myGPIO, stream, address)
 
 
 # Helper to reload config of a running daemon
@@ -98,13 +98,13 @@ def daemon_reload():
         sock.close()
 
 
-class GPIODaemon(Daemon):
+class myGPIODaemon(Daemon):
     def run(self):
         try:
             logger.info("Starting daemon")
             logger.info(dir(gpiomanager))
-            GPIO = gpiomanager.rGPIO(logger=logger, configfile=CONFIG_FILE)
-            gpio_server = GPIOServer(GPIO)
+            myGPIO = gpiomanager.rmyGPIO(logger=logger, configfile=CONFIG_FILE)
+            gpio_server = GPIOServer(myGPIO)
             gpio_server.listen(PORT)
 
 
@@ -119,27 +119,27 @@ class GPIODaemon(Daemon):
 
         finally:
             try:
-                GPIO.cleanup()
+                myGPIO.cleanup()
 
             except Exception as e:
                 logger.exception(e)
 
             finally:
-                logger.info("GPIODaemon stopped")
+                logger.info("myGPIODaemon stopped")
 
 
 # Console start
 if __name__ == '__main__':
     # Prepare help and options
     usage = """usage: %prog start|stop|restart|reload"""
-    desc="""GPIO-Daemon is little program to help dealing with/programming the
-GPIO ports on the Raspberry pi via a socket interface (eg. telnet). The
+    desc="""myGPIO-Daemon is little program to help dealing with/programming the
+myGPIO ports on the Raspberry pi via a socket interface (eg. telnet). The
 daemon listens on port %s for TCP connections.""" % PORT
     parser = OptionParser(usage=usage, description=desc)
     (options, args) = parser.parse_args()
 
     # Setup daemon
-    daemon = GPIODaemon(PIDFILE)
+    daemon = myGPIODaemon(PIDFILE)
 
     # Process startup argument
     if not args:
@@ -147,7 +147,7 @@ daemon listens on port %s for TCP connections.""" % PORT
 
     elif "start" == args[0]:
         daemon.start()
-        print "GPIO daemon started."
+        print "myGPIO daemon started."
 
     elif "stop" == args[0]:
         daemon.stop()
