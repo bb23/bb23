@@ -276,17 +276,17 @@ class rGPIO(object):
         self._reload_config()
 
         # Setup pins according to config file
-        for gpio_id, mode in self.config.get("gpio-setup").items():
-            if mode == "OUTPUT":
-                mode = self.OUTPUT
-            elif mode == "INPUT":
-                mode = self.INPUT
-            else:
-                self.logger.warn("Error: cannot set mode to '%s' (_gpio_init)", mode)
-                return
+        # for gpio_id, mode in self.config.get("gpio-setup").items():
+        #     if mode == "OUTPUT":
+        #         mode = self.OUTPUT
+        #     elif mode == "INPUT":
+        #         mode = self.INPUT
+        #     else:
+        #         self.logger.warn("Error: cannot set mode to '%s' (_gpio_init)", mode)
+        #         return
 
-            # Setup pin to default mode from config file
-            self.setup(gpio_id, mode)
+        #     # Setup pin to default mode from config file
+        #     self.setup(gpio_id, mode)
 
     def _handle_cmd(self, internal_cmd):
         # Internal cmd is the actual command (triggered by the user command).
