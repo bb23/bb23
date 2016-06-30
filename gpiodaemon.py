@@ -24,13 +24,10 @@ from tornado.tcpserver import TCPServer
 from daemon import Daemon
 import gpiomanager
 
-
 LOGFILE = "gpiodaemon.log"
 LOGLEVEL = logging.DEBUG
-
 PORT = 9101
 PIDFILE = "/tmp/gpiodaemon.pid"
-
 
 # Setup Logging
 logging.basicConfig(filename=LOGFILE, format='%(levelname)s | %(asctime)s | %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
