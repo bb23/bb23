@@ -41,12 +41,12 @@ class Driver(object):
         GPIO.setup(lf_forward, OUT)
         GPIO.setup(lf_backward, OUT)
         GPIO.setup(lf_pwm, OUT)
-        
+
         # Initialize Right Rear Motor
         GPIO.setup(rr_forward, OUT)
         GPIO.setup(rr_backward, OUT)
         GPIO.setup(rr_pwm, OUT)
-        
+
         # Initialize Left Rear Motor
         GPIO.setup(lr_forward, OUT)
         GPIO.setup(lr_backward, OUT)
@@ -58,10 +58,9 @@ class Driver(object):
         print "Right motor engaged."
         GPIO.output(rf_forward, HIGH)
         GPIO.output(rf_backward, LOW)
-        
         GPIO.output(rr_forward, HIGH)
         GPIO.output(rr_backward, LOW)
-        
+
         GPIO.output(rr_pwm, HIGH)
         GPIO.output(rf_pwm, HIGH)
 
@@ -79,12 +78,12 @@ class Driver(object):
         GPIO.output(lf_backward, LOW)
         GPIO.output(lr_forward, HIGH)
         GPIO.output(lr_backward, LOW)
-        
+
         GPIO.output(lr_pwm, HIGH)
         GPIO.output(lf_pwm, HIGH)
 
         sleep(seconds)
-        
+
         GPIO.output(lf_pwm, LOW)
         GPIO.output(lr_pwm, LOW)
 
@@ -96,10 +95,10 @@ class Driver(object):
         # forward pins to high
         GPIO.output(rf_forward, HIGH)
         GPIO.output(rr_forward, HIGH)
-        
+
         GPIO.output(lf_forward, HIGH)
         GPIO.output(lr_forward, HIGH)
-        
+
         # back pins to low
         GPIO.output(rf_backward, LOW)
         GPIO.output(rr_backward, LOW)
@@ -119,10 +118,10 @@ class Driver(object):
         print "Ran for %s seconds" % seconds
         GPIO.output(rf_pwm, LOW)
         GPIO.output(lf_pwm, LOW)
-        
+
         GPIO.output(rr_pwm, LOW)
         GPIO.output(lr_pwm, LOW)
-        
+
         print "Forward disengaged."
 
     def cleanup(self):

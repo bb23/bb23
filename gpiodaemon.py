@@ -11,14 +11,12 @@ import os
 import sys
 import signal
 import socket
-import traceback
 import logging
-from os import getpid, remove, kill
 from optparse import OptionParser
 from time import sleep
 
 from tornado.ioloop import IOLoop
-#from tornado.netutil import TCPServer
+# from tornado.netutil import TCPServer
 from tornado.tcpserver import TCPServer
 
 from daemon import Daemon
