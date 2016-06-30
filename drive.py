@@ -1,11 +1,9 @@
 #!usr/bin/env python
-import inspect
-import io
 import datetime
 import logging
 import random
-import time
-
+from time import sleep
+import socket
 
 import cv2
 import numpy as np
@@ -14,7 +12,10 @@ import picamera.array
 # from random_walker import RandomWalker
 
 from bbCamera import BbCamera
-import driver
+
+from gpiodaemon import GPIODaemon
+
+PIDFILE = "/tmp/gpiodaemon.pid"
 
 
 TICKLE = 0.2
@@ -25,27 +26,48 @@ UPPER = np.array([30, 160, 255])
 VERBOTTEN_METHODS = set("cleanup")
 
 
+TCP_IP = '127.0.0.1'
+TCP_PORT = 9101
+BUFFER_SIZE = 30
+
+
+def send_command(command):
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect((TCP_IP, TCP_PORT))
+    s.send(command + "\n")
+    data = s.recv(BUFFER_SIZE)
+    s.close()
+
+    print "received data:", data
+
+"""
+send_command("forward")
+sleep(3)
+send_command("turn_right")
+sleep(3)
+send_command("turn_left")
+sleep(3)
+send_command("stop")
+"""
+
+
 def main():
     logging.basicConfig(filename='/home/pi/bb23/example.log', level=logging.DEBUG)
-    start_timestamp = datetime.datetime.now().strftime("%Y%m%d_%H-%M-%S.%f")
-    image_path = "/home/pi/bb23/images/%s_%s.jpg"
+    # start_timestamp = datetime.datetime.now().strftime("%Y%m%d_%H-%M-%S.%f")
+    # image_path = "/home/pi/bb23/images/%s_%s.jpg"
     try:
         cam = BbCamera()
-        # cam.start_recording(image_path % (start_timestamp))
-        # cam.start_preview()
-        time.sleep(2)
+        sleep(2)
+        driver_daemon = GPIODaemon(PIDFILE)
+        driver_daemon.start()
 
         # Initialize drive controller and get methods sans Verbotten
-        drive_controller = driver.Driver()
+
         logging.info("\n\nDriver enabled")
 
-        #methods = set(inspect.getmembers(drive_controller,
-        #                                 predicate=inspect.ismethod))
-        #methods -= VERBOTTEN_METHODS
-        methods = ["forward", "left_motor_high_forward", "right_motor_high_forward"]
+        methods = ["forward", "turn_right", "turn_left"]
         loopery = True
         while loopery:
-            # current_time = datetime.datetime.now().strftime("%Y%m%d_%H-%M-%S.%f")
             # CAPTURE IMAGE
             with picamera.array.PiRGBArray(cam) as stream:
                 cam.capture(stream, 'bgr')
@@ -64,14 +86,15 @@ def main():
             (_, cnts, _) = cv2.findContours(color_mask.copy(),
                                             cv2.RETR_EXTERNAL,
                                             cv2.CHAIN_APPROX_SIMPLE)
-            
+
             if len(cnts) == 0:
                 # Jitter'd random walk.
                 print "==================================="
                 print "     Random walk mode enabled      "
                 print "==================================="
                 random_method = random.choice(methods)
-                getattr(drive_controller, random_method)(TICKLE)
+                send_command(random_method)
+                sleep(TICKLE)
                 continue
 
             c = max(cnts, key=cv2.contourArea)
@@ -83,17 +106,23 @@ def main():
             M = cv2.moments(approx)
             try:
                 c_x = int(M['m10']/M['m00'])
-                c_y = int(M['m01']/M['m00'])
+                # c_y = int(M['m01']/M['m00'])
             except ZeroDivisionError:
                 logging.info("dividing by zero")
                 continue
-                
+
             if c_x < center_x_low:
-                drive_controller.right_motor_high_forward(TICKLE/2)
+                send_command("turn_left")
+                sleep(TICKLE/2)
+                # drive_controller.right_motor_high_forward(TICKLE/2)
             elif c_x > center_x_high:
-                drive_controller.left_motor_high_forward(TICKLE/2)
+                send_command("turn_right")
+                sleep(TICKLE/2)
+                # drive_controller.left_motor_high_forward(TICKLE/2)
             else:
-                drive_controller.forward(TICKLE/2)
+                send_command("forward")
+                sleep(TICKLE/2)
+                # drive_controller.forward(TICKLE/2)
 
     except Exception as e:
         error_timestamp = datetime.datetime.now().strftime("%Y%m%d_%H:%M:%S.%f")
