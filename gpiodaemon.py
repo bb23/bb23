@@ -28,8 +28,6 @@ import gpiomanager
 LOGFILE = "gpiodaemon.log"
 LOGLEVEL = logging.DEBUG
 
-CONFIG_FILE = os.path.join(os.path.abspath(os.path.dirname(__file__)), "config.yaml")
-
 PORT = 9101
 PIDFILE = "/tmp/gpiodaemon.pid"
 
@@ -103,10 +101,9 @@ class GPIODaemon(Daemon):
         try:
             logger.info("Starting daemon")
             logger.info(dir(gpiomanager))
-            myGPIO = gpiomanager.rGPIO(logger=logger, configfile=CONFIG_FILE)
+            myGPIO = gpiomanager.rGPIO(logger=logger)
             gpio_server = GPIOServer(myGPIO)
             gpio_server.listen(PORT)
-
 
             # Loop here
             IOLoop.instance().start()

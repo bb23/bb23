@@ -15,10 +15,8 @@ Use:
     GPIO.reload()
     GPIO.handle_cmd(<cmd>)
 """
-import yaml
 import time
 import logging
-from threading import Thread
 
 # Import GPIO module -- either the dummy or the real lib
 try:
@@ -94,7 +92,7 @@ class Driver(object):
 
         print "Initialized Driver Object."
 
-    def turn_left(self, seconds):
+    def turn_left(self):
         print "Turning left."
         GPIO.output(rf_forward, HIGH)
         GPIO.output(rf_backward, LOW)
@@ -115,7 +113,7 @@ class Driver(object):
         GPIO.output(lf_pwm, HIGH)
 
 
-    def turn_right(self, seconds):
+    def turn_right(self):
         print "Turning right."
         GPIO.output(rf_forward, LOW)
         GPIO.output(rf_backward, HIGH)
@@ -123,11 +121,11 @@ class Driver(object):
         GPIO.output(rr_forward, LOW)
         GPIO.output(rr_backward, HIGH)
 
-        GPIO.output(lf_forward, LOW)
-        GPIO.output(lf_backward, HIGH)
+        GPIO.output(lf_forward, HIGH)
+        GPIO.output(lf_backward, LOW)
 
-        GPIO.output(lr_forward, LOW)
-        GPIO.output(lr_backward, HIGH)
+        GPIO.output(lr_forward, HIGH)
+        GPIO.output(lr_backward, LOW)
 
         GPIO.output(rr_pwm, HIGH)
         GPIO.output(rf_pwm, HIGH)
@@ -136,7 +134,7 @@ class Driver(object):
         GPIO.output(lf_pwm, HIGH)
 
 
-    def forward(self, seconds):
+    def forward(self):
         print "Forward engaged."
         # forward pins to high
         GPIO.output(rf_forward, HIGH)
@@ -159,7 +157,7 @@ class Driver(object):
         GPIO.output(rr_pwm, HIGH)
         GPIO.output(lr_pwm, HIGH)
 
-    def stop(self, seconds):
+    def stop(self):
         print("Stopping")
 
         GPIO.output(rf_forward, LOW)
@@ -184,42 +182,15 @@ class Driver(object):
 
 
     def cleanup(self):
+        self.stop()
         GPIO.cleanup()
-
-# Scheduled command thread
-class AsyncCmd(Thread):
-    is_cancelled = False
-    is_finished = False
-    def __init__(self, timeout_sec, cmd, handle_cmd_cb, is_replaceable=True):
-        # If is_replaceable is True and another timeout with the same command is added, the
-        # existing timeout will be suspended and only the new one executed.
-        Thread.__init__(self)
-        self.timeout_sec = timeout_sec
-        self.cmd = cmd
-        self.handle_cmd_cb = handle_cmd_cb  # callback to execute command with
-        self.is_replaceable = is_replaceable
-
-    def run(self):
-        time.sleep(self.timeout_sec)
-        if not self.is_cancelled:
-            self.handle_cmd_cb(self.cmd)
-        self.is_finished = True
 
 
 # Main GPIO handler class
 class rGPIO(object):
-    INPUT = GPIO.IN
-    OUTPUT = GPIO.OUT
-    HIGH = GPIO.HIGH
-    LOW = GPIO.LOW
 
-    config = None
-    commands = None
-    async_pool = []
-
-    def __init__(self, logger, configfile):
+    def __init__(self, logger):
         self.logger = logger
-        self.fn_config = configfile
 
         self.logger.info("Initializing gpio pins.")
         GPIO.setmode(GPIO_MODE)
@@ -231,62 +202,23 @@ class rGPIO(object):
         logger.info("Initialized driver")
 
 
-
-    # Public Functions
-    def setup(self, gpio_id, mode=OUTPUT):
-        GPIO.setup(gpio_id, mode)
-
-    def gpio_output(self, gpio_id, value=HIGH):
-        GPIO.output(gpio_id, value)
-
-    def gpio_readinput(self, gpio_id):
-        return GPIO.input(gpio_id)
-
     def cleanup(self):
         # Reset all channels that have been set up
         GPIO.cleanup()
 
-    def reload(self):
-        self._gpio_init()
 
     def handle_cmd(self, cmd):
-        # Called from tcp daemon if command comes in. Any return value will be sent
-        # to the socket connection.
+        # New handle command class that's simpler
+
         cmd = cmd.strip()
         self.logger.info("cmd: '%s'" % cmd)
 
-        if cmd == "reload":
-            self.reload()
+        return self._handle_cmd(cmd)
 
-        elif cmd in self.commands:
-            # translate user-command to system-command and execute
-            return self._handle_cmd(self.commands[cmd])
-
-        else:
-            return self._handle_cmd(cmd)
-
-    def _reload_config(self):
-        self.config = yaml.load(open(self.fn_config))
-        self.logger.info("Config loaded: %s", self.config)
-        self.commands = self.config["commands"]
 
     def _gpio_init(self):
         # Read config and set modes accordingly
         GPIO.cleanup()
-        self._reload_config()
-
-        # Setup pins according to config file
-        # for gpio_id, mode in self.config.get("gpio-setup").items():
-        #     if mode == "OUTPUT":
-        #         mode = self.OUTPUT
-        #     elif mode == "INPUT":
-        #         mode = self.INPUT
-        #     else:
-        #         self.logger.warn("Error: cannot set mode to '%s' (_gpio_init)", mode)
-        #         return
-
-        #     # Setup pin to default mode from config file
-        #     self.setup(gpio_id, mode)
 
     def _handle_cmd(self, internal_cmd):
         # Internal cmd is the actual command (triggered by the user command).
@@ -295,65 +227,25 @@ class rGPIO(object):
         cmd_parts = internal_cmd.split(" ")
         cmd = cmd_parts[0]
 
-        if cmd == "set":
-            gpio_id, value = cmd_parts[1:3]
-
-            if value == "HIGH":
-                value = self.HIGH
-
-            elif value == "LOW":
-                value = self.LOW
-
-            else:
-                self.logger.warn("Error cannot handle command '%s' due to bad value", internal_cmd)
-                return
-
-            self.gpio_output(int(gpio_id), value)
-
-        elif cmd == "read":
-            # examples:
-            #   `read 17`  # reads the input on the gpio pin and returns the value
-            gpio_id = cmd_parts[1]
-            return self.gpio_readinput(gpio_id)
-
-        elif cmd == "forward":
+        if cmd == "forward":
             self.logger.info("in command forward")
-            self.driver.forward(1)
+            self.driver.forward()
             return "going forward"
 
         elif cmd == "turn_left":
             self.logger.info("in command turn_left")
-            self.driver.turn_left(1)
+            self.driver.turn_left()
             return "turn left"
 
         elif cmd == "turn_right":
             self.logger.info("in command turn_right")
-            self.driver.turn_right(1)
+            self.driver.turn_right()
             return "turning_right"
 
         elif cmd == "stop":
             self.logger.info("in command stop")
-            self.driver.stop(1)
+            self.driver.stop()
             return "stop"
-
-        elif cmd == "rtimeout":
-            # Replaceable timeout. Replaces based on "cmd" only.
-            timeout = cmd_parts[1]
-            cmd = " ".join(cmd_parts[2:])
-            self.logger.info("understood rtimeout. cmd in %s seconds: `%s`", timeout, cmd)
-
-            # Disable all old ones from the pool
-            for async_cmd in self.async_pool:
-                if async_cmd.cmd == cmd and async_cmd.is_replaceable:
-                    async_cmd.is_cancelled = True
-
-            # Remove cancelled threads from the pool
-            self.async_pool[:] = [t for t in self.async_pool if (not t.is_cancelled) and (not t.is_finished)]
-
-            # Now add new task
-            t = AsyncCmd(int(timeout), cmd, self.handle_cmd, is_replaceable=True)
-            t.start()
-            self.async_pool.append(t)
 
         else:
             self.logger.warn("command '%s' not recognized", cmd)
@@ -366,8 +258,8 @@ if __name__ == "__main__":
     logger.setLevel(logging.DEBUG)
 
     # Run tests
-    g = rGPIO(logger, "config.yaml")
-    g.handle_cmd("thermo on")
-    g.handle_cmd("rtimeout 3 thermo off")
+    g = rGPIO(logger)
+    g.handle_cmd("forward")
+    g.handle_cmd("turng_left")
     time.sleep(5)
     g.cleanup()
