@@ -56,7 +56,7 @@ def main():
     try:
         cam = BbCamera()
         sleep(2)
-        os.system("gpiodaemon.py start")
+        os.system("python gpiodaemon.py start")
 
         logging.info("\n\nDriver enabled")
 
