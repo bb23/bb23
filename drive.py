@@ -11,6 +11,8 @@ import picamera
 import picamera.array
 from bbCamera import BbCamera
 
+import os
+
 
 PIDFILE = "/tmp/gpiodaemon.pid"
 
@@ -54,8 +56,7 @@ def main():
     try:
         cam = BbCamera()
         sleep(2)
-
-        # Initialize drive controller and get methods sans Verbotten
+        os.system("gpiodaemon.py start")
 
         logging.info("\n\nDriver enabled")
 
