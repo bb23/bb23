@@ -33,6 +33,12 @@ class BbCamera(PiCamera):
         # image_path = "/home/pi/bb23/images/%s_%s.jpg"
         # Initialize drive controller and get methods sans Verbotten
 
+
+class Gaffer():
+
+    def __init__(self):
+        self.cam = BbCamera()
+
         logging.info("\n\nCamera enabled")
 
         self.loopery = True
@@ -41,8 +47,8 @@ class BbCamera(PiCamera):
 
         while self.loopery:
             # CAPTURE IMAGE
-            with picamera.array.PiRGBArray(cam) as stream:
-                cam.capture(stream, 'bgr')
+            with picamera.array.PiRGBArray(self.cam) as stream:
+                self.cam.capture(stream, 'bgr')
                 image = stream.array
 
             # GRAB IMAGE ATTRIBUTES
@@ -98,10 +104,9 @@ def main():
     # image_path = "/home/pi/bb23/images/%s_%s.jpg"
     try:
 
-        cam = BbCamera()
-        logging.info("\n\nCamera enabled")
+        gaffer = Gaffer()
 
-        BbCamera.run()
+        gaffer.run()
 
     except Exception as e:
         error_timestamp = datetime.datetime.now().strftime("%Y%m%d_%H:%M:%S.%f")
