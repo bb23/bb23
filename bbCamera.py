@@ -64,6 +64,8 @@ class Gaffer():
             (_, cnts, _) = cv2.findContours(color_mask.copy(),
                                             cv2.RETR_EXTERNAL,
                                             cv2.CHAIN_APPROX_SIMPLE)
+            if len(cnts) == 0:
+                continue
 
             c = max(cnts, key=cv2.contourArea)
 
@@ -80,7 +82,7 @@ class Gaffer():
                 continue
 
             logging.info(c_x)
-            sleep(tickle)
+            sleep(TICKLE)
 
             # if c_x < center_x_low:
             #     send_command("turn_left")
