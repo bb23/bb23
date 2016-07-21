@@ -38,7 +38,7 @@ class Gaffer():
         self.loopery = True
 
     def write_status(self, status):
-        with open("file_status.txt") as f:
+        with open("file_status.txt",'w') as f:
             f.write(status)
 
     def run(self):
@@ -83,12 +83,12 @@ class Gaffer():
             sleep(TICKLE)
 
             if c_x < center_x_low:
-                self.write_status("turn_left")
+                self.write_status("turn_left\n")
 
             elif c_x > center_x_high:
-                self.write_status("turn_right")
+                self.write_status("turn_right\n")
             else:
-                self.write_status("forward")
+                self.write_status("forward\n")
 
 
 def main():
