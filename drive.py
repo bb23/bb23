@@ -5,26 +5,13 @@ import random
 from time import sleep
 import socket
 
-import cv2
-import numpy as np
-import picamera
-import picamera.array
-# from random_walker import RandomWalker
-
 from bbCamera import BbCamera
 
 from gpiodaemon import GPIODaemon
 
 PIDFILE = "/tmp/gpiodaemon.pid"
 
-
 TICKLE = 0.2
-
-LOWER = np.array([0, 70, 120])
-UPPER = np.array([30, 160, 255])
-
-VERBOTTEN_METHODS = set("cleanup")
-
 
 TCP_IP = '127.0.0.1'
 TCP_PORT = 9101
@@ -68,24 +55,25 @@ def main():
         methods = ["forward", "turn_right", "turn_left"]
         loopery = True
         while loopery:
-            # CAPTURE IMAGE
-            with picamera.array.PiRGBArray(cam) as stream:
-                cam.capture(stream, 'bgr')
-                image = stream.array
 
-            # GRAB IMAGE ATTRIBUTES
-            height, width, channels = image.shape
-            # assign left right center region
-            center_x_low = width / 2 - 100
-            center_x_high = width / 2 + 100
+            # # CAPTURE IMAGE
+            # with picamera.array.PiRGBArray(cam) as stream:
+            #     cam.capture(stream, 'bgr')
+            #     image = stream.array
 
-            # BUILD COLOR MASK WITH CONSTANTS SET FOR ~ORANGE
-            color_mask = cv2.inRange(image, LOWER, UPPER)
+            # # GRAB IMAGE ATTRIBUTES
+            # height, width, channels = image.shape
+            # # assign left right center region
+            # center_x_low = width / 2 - 100
+            # center_x_high = width / 2 + 100
 
-            # find contours in the masked image and keep the largest one
-            (_, cnts, _) = cv2.findContours(color_mask.copy(),
-                                            cv2.RETR_EXTERNAL,
-                                            cv2.CHAIN_APPROX_SIMPLE)
+            # # BUILD COLOR MASK WITH CONSTANTS SET FOR ~ORANGE
+            # color_mask = cv2.inRange(image, LOWER, UPPER)
+
+            # # find contours in the masked image and keep the largest one
+            # (_, cnts, _) = cv2.findContours(color_mask.copy(),
+            #                                 cv2.RETR_EXTERNAL,
+            #                                 cv2.CHAIN_APPROX_SIMPLE)
 
             if len(cnts) == 0:
                 # Jitter'd random walk.
@@ -97,19 +85,20 @@ def main():
                 sleep(TICKLE)
                 continue
 
-            c = max(cnts, key=cv2.contourArea)
+            # c = max(cnts, key=cv2.contourArea)
 
-            # approximate the contour
-            peri = cv2.arcLength(c, True)
-            approx = cv2.approxPolyDP(c, 0.05 * peri, True)
+            # # approximate the contour
+            # peri = cv2.arcLength(c, True)
+            # approx = cv2.approxPolyDP(c, 0.05 * peri, True)
 
-            M = cv2.moments(approx)
-            try:
-                c_x = int(M['m10']/M['m00'])
-                # c_y = int(M['m01']/M['m00'])
-            except ZeroDivisionError:
-                logging.info("dividing by zero")
-                continue
+            # M = cv2.moments(approx)
+            # try:
+            #     c_x = int(M['m10']/M['m00'])
+            #     # c_y = int(M['m01']/M['m00'])
+            # except ZeroDivisionError:
+            #     logging.info("dividing by zero")
+            #     continue
+
 
             if c_x < center_x_low:
                 send_command("turn_left")
