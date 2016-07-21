@@ -1,10 +1,7 @@
 #!/usr/bin/env python
 import time
-
-#!usr/bin/env python
 import datetime
 import logging
-import random
 from time import sleep
 
 import cv2
@@ -22,16 +19,13 @@ UPPER = np.array([30, 160, 255])
 
 VERBOTTEN_METHODS = set("cleanup")
 
+
 class BbCamera(PiCamera):
 
     def __init__(self):
         PiCamera.__init__(self)
         self.hflip = self.vflip = True
         time.sleep(2)
-
-        # start_timestamp = datetime.datetime.now().strftime("%Y%m%d_%H-%M-%S.%f")
-        # image_path = "/home/pi/bb23/images/%s_%s.jpg"
-        # Initialize drive controller and get methods sans Verbotten
 
 
 class Gaffer():
@@ -43,6 +37,10 @@ class Gaffer():
 
         self.loopery = True
 
+    def write_status(self, status):
+        with open("file_status.txt") as f:
+            f.write(status)
+
     def run(self):
 
         while self.loopery:
@@ -53,6 +51,7 @@ class Gaffer():
 
             # GRAB IMAGE ATTRIBUTES
             height, width, channels = image.shape
+
             # assign left right center region
             center_x_low = width / 2 - 100
             center_x_high = width / 2 + 100
@@ -76,7 +75,6 @@ class Gaffer():
             M = cv2.moments(approx)
             try:
                 c_x = int(M['m10']/M['m00'])
-                # c_y = int(M['m01']/M['m00'])
             except ZeroDivisionError:
                 logging.info("dividing by zero")
                 continue
@@ -84,26 +82,18 @@ class Gaffer():
             logging.info(c_x)
             sleep(TICKLE)
 
-            # if c_x < center_x_low:
-            #     send_command("turn_left")
-            #     sleep(TICKLE/2)
-            #     # drive_controller.right_motor_high_forward(TICKLE/2)
-            # elif c_x > center_x_high:
-            #     send_command("turn_right")
-            #     sleep(TICKLE/2)
-            #     # drive_controller.left_motor_high_forward(TICKLE/2)
-            # else:
-            #     send_command("forward")
-            #     sleep(TICKLE/2)
-            #     # drive_controller.forward(TICKLE/2)
+            if c_x < center_x_low:
+                self.write_status("turn_left")
 
+            elif c_x > center_x_high:
+                self.write_status("turn_right")
+            else:
+                self.write_status("forward")
 
 
 def main():
 
     logging.basicConfig(filename='/home/pi/bb23/camera.log', level=logging.DEBUG)
-    # start_timestamp = datetime.datetime.now().strftime("%Y%m%d_%H-%M-%S.%f")
-    # image_path = "/home/pi/bb23/images/%s_%s.jpg"
     try:
 
         gaffer = Gaffer()
