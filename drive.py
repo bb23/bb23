@@ -7,7 +7,7 @@ import socket
 
 from bbCamera import BbCamera
 
-from gpiodaemon import GPIODaemon
+import os
 
 PIDFILE = "/tmp/gpiodaemon.pid"
 
@@ -45,10 +45,7 @@ def main():
     try:
         cam = BbCamera()
         sleep(2)
-        driver_daemon = GPIODaemon(PIDFILE)
-        driver_daemon.start()
-
-        # Initialize drive controller and get methods sans Verbotten
+        os.system("python gpiodaemon.py start")
 
         logging.info("\n\nDriver enabled")
 
