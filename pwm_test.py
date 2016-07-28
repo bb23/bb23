@@ -166,7 +166,6 @@ class Driver(object):
 
         print "Forward disengaged."
 
-
     def forward_back_pwm(self, seconds):
         print "Forward engaged."
         # forward pins to high
@@ -211,13 +210,12 @@ class Driver(object):
         lf1.ChangeDutyCycle(0)
         lr1.ChangeDutyCycle(0)
 
-
     def cleanup(self):
         GPIO.cleanup()
 
 if __name__ == "__main__":
 
     driver = Driver()
-    driver.forward_pwm(5)
+    driver.forward_back_pwm(5)
 
     driver.cleanup()
