@@ -209,6 +209,7 @@ class Driver(object):
         rr1.ChangeDutyCycle(0)
         lf1.ChangeDutyCycle(0)
         lr1.ChangeDutyCycle(0)
+        sleep(seconds)
 
     def cleanup(self):
         GPIO.cleanup()
