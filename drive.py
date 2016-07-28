@@ -5,8 +5,6 @@ import random
 from time import sleep
 import socket
 
-from bbCamera import BbCamera
-
 import os
 
 PIDFILE = "/tmp/gpiodaemon.pid"
@@ -42,8 +40,6 @@ send_command("stop")
 def main():
     logging.basicConfig(filename='example.log', level=logging.DEBUG)
     try:
-        cam = BbCamera()
-        sleep(2)
         os.system("python gpiodaemon.py start")
 
         logging.info("\n\nDriver enabled")
@@ -62,6 +58,9 @@ def main():
                 print "==================================="
                 random_method = random.choice(methods)
                 send_command(random_method)
+                sleep(TICKLE) 
+                continue
+
             elif status == "turn_left":
                 send_command("turn_left")
             elif status == "turn_right":
@@ -74,6 +73,8 @@ def main():
         import traceback
         logging.debug(error_timestamp + ": " + str(e))
         traceback.print_exc(file=open('traceback.log','a'))
-
+    finally: 
+        os.system("python gpiodaemon.py stop")
+        os.system("python cleanup.py")
 if __name__ == "__main__":
     main()
