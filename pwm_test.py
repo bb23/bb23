@@ -157,10 +157,6 @@ class Driver(object):
         sleep(seconds)
 
         print "Ran for %s seconds" % seconds
-        
-        rf.stop()
-        rr.stop()
-         
 
         GPIO.output(rf_pwm, LOW)
         GPIO.output(lf_pwm, LOW)
@@ -170,6 +166,52 @@ class Driver(object):
 
         print "Forward disengaged."
 
+
+    def forward_back_pwm(self, seconds):
+        print "Forward engaged."
+        # forward pins to high
+        rf1 = GPIO.PWM(rf_forward, hertz)
+        rf2 = GPIO.PWM(rf_backward, hertz)
+
+        rr1 = GPIO.PWM(rr_forward, hertz)
+        rr2 = GPIO.PWM(rr_backward, hertz)
+
+        lf1 = GPIO.PWM(lf_forward, hertz)
+        lf2 = GPIO.PWM(lf_backward, hertz)
+
+        lr1 = GPIO.PWM(lr_forward, hertz)
+        lr2 = GPIO.PWM(lr_backward, hertz)
+
+        rf2.start(0)
+        rr2.start(0)
+        lf2.start(0)
+        lr2.start(0)
+
+        rf1.start(50)
+        rr1.start(50)
+        lf1.start(50)
+        lr1.start(50)
+
+        # Engage pwmm
+        GPIO.output(rf_pwm, HIGH)
+        GPIO.output(lf_pwm, HIGH)
+
+        GPIO.output(rr_pwm, HIGH)
+        GPIO.output(lr_pwm, HIGH)
+
+        sleep(seconds)
+
+        rf2.ChangeDutyCycle(50)
+        rr2.ChangeDutyCycle(50)
+        lf2.ChangeDutyCycle(50)
+        lr2.ChangeDutyCycle(50)
+
+        rf1.ChangeDutyCycle(0)
+        rr1.ChangeDutyCycle(0)
+        lf1.ChangeDutyCycle(0)
+        lr1.ChangeDutyCycle(0)
+
+
     def cleanup(self):
         GPIO.cleanup()
 
@@ -177,6 +219,5 @@ if __name__ == "__main__":
 
     driver = Driver()
     driver.forward_pwm(5)
-    driver.forward(5)
 
     driver.cleanup()
