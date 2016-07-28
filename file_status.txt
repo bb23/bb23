@@ -1,1 +1,1 @@
-turn_left
+forward

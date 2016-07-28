@@ -29,6 +29,7 @@ HIGH = GPIO.HIGH
 LOW = GPIO.LOW
 OUT = GPIO.OUT
 
+hertz = 60
 
 class Driver(object):
     def __init__(self):
@@ -127,11 +128,11 @@ class Driver(object):
     def forward_pwm(self, seconds):
         print "Forward engaged."
         # forward pins to high
-        rf = GPIO.PWM(rf_forward, 1)
-        rr = GPIO.PWM(rr_forward, 1)
+        rf = GPIO.PWM(rf_forward, hertz)
+        rr = GPIO.PWM(rr_forward, hertz)
 
-        lf = GPIO.PWM(lf_forward, 1)
-        lr = GPIO.PWM(lr_forward, 1)
+        lf = GPIO.PWM(lf_forward, hertz)
+        lr = GPIO.PWM(lr_forward, hertz)
 
         rf.start(50)
         rr.start(50)
@@ -156,6 +157,11 @@ class Driver(object):
         sleep(seconds)
 
         print "Ran for %s seconds" % seconds
+        
+        rf.stop()
+        rr.stop()
+         
+
         GPIO.output(rf_pwm, LOW)
         GPIO.output(lf_pwm, LOW)
 
@@ -171,6 +177,6 @@ if __name__ == "__main__":
 
     driver = Driver()
     driver.forward_pwm(5)
-    driver.foward(5)
+    driver.forward(5)
 
     driver.cleanup()
