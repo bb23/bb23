@@ -37,7 +37,7 @@ class Pin(object):
         GPIO.setup(pin_number, OUT)
         self.p = GPIO.pwm(pin_number, freq)
 
-    def high(self, duty_cycle):
+    def high(self, duty_cycle=50):
         self.p.ChangeDutyCycle(duty_cycle)
 
     def low(self):
@@ -48,31 +48,26 @@ class Pin(object):
 
 
 class EnablerPin(object):
-    # freq = hertz (cycles/second)
     def __init__(self, pin_number):
         GPIO.setup(pin_number, OUT)
         self.pin_number = pin_number
 
-    def high(self, duty_cycle):
-        GPIO.output(pin_number, HIGH)
+    def high(self):
+        GPIO.output(self.pin_number, HIGH)
 
     def low(self):
-        GPIO.output(pin_number, LOW)
+        GPIO.output(self.pin_number, LOW)
 
     def cleanup():
-        GPIO.output(pin_number, LOW)
-
+        GPIO.output(self.pin_number, LOW)
 
 class Wheel(object):
     def __init__(self, pin1, pin2, enabler):
 
-        self.pin1 = pin1
-        self.pin2 = pin2
-        self.enabler = enabler
+        self.pin1 = Pin(pin1)
+        self.pin2 = Pin(pin2)
+        self.enabler = EnablerPin(enabler)
 
-        self.pin1.init()
-        self.pin2.init()
-        self.enabler.init()
 
     # go forward at speed (0-100)
     def forward(self, speed):
@@ -96,32 +91,16 @@ class Driver(object):
     # Create and assign all the pins
     def __init__(self):
         # Initialize Right Front Wheel
-        rff_pin = Pin(rf_forward)
-        rfb_pin = Pin(rf_backward)
-        rfe_pin = Pin(rf_enabler)
-
-        rf_wheel = Wheel(rff_pin, rfb_pin, rfe_pin)
+        rf_wheel = Wheel(rf_forward, rf_backward, rf_enabler)
 
         # Initialize Right Rear Wheel
-        rrf_pin = Pin(rr_forward)
-        rrb_pin = Pin(rr_backward)
-        rre_pin = Pin(rr_enabler)
-
-        rr_wheel = Wheel(rrf_pin, rrb_pin, rre_pin)
+        rr_wheel = Wheel(rr_forward, rr_backward, rr_enabler)
 
         # Initialize Left Front Wheel
-        lff_pin = Pin(lf_forward)
-        lfb_pin = Pin(lf_backward)
-        lfe_pin = Pin(rf_enabler)
-
-        lf_wheel = Wheel(lff_pin, lfb_pin, lfe_pin)
+        lf_wheel = Wheel(lf_forward, lf_backward, lf_enabler)
 
         # Initialize Left Rear Wheel
-        lrf_pin = Pin(lr_forward)
-        lrb_pin = Pin(lr_backward)
-        lre_pin = Pin(lr_enabler)
-
-        lr_wheel = Wheel(lrf_pin, lrb_pin, lre_pin)
+        lr_wheel = Wheel(lr_forward, lr_backward, lr_enabler)
 
         print "Initialized Driver Object."
 
