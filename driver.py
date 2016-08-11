@@ -4,53 +4,124 @@ from time import sleep
 
 GPIO.setmode(GPIO.BOARD)
 
+
 # Right front motor
 rf_forward = 18
 rf_backward = 16
-rf_pwm = 12
+rf_enabler = 12
 
 #Right Rear Motor
 rr_forward = 33
 rr_backward = 31
-rr_pwm = 29
+rr_enabler = 29
 
 # Left front motor
 lf_forward = 15
 lf_backward = 13
-lf_pwm = 11
+lf_enabler = 11
 
 #left Rear Motor
 lr_forward = 36
 lr_backward = 37
-lr_pwm = 32
+lr_enabler = 32
 
 
 HIGH = GPIO.HIGH
 LOW = GPIO.LOW
 OUT = GPIO.OUT
 
+class Pin(object):
+    # freq = hertz (cycles/second)
+    def __init__(self, pin_number, freq=60):
+
+        GPIO.setup(pin_number, OUT)
+        self.p = GPIO.pwm(pin_number, freq)
+
+    def high(self, duty_cycle):
+        self.p.ChangeDutyCycle(duty_cycle)
+
+    def low(self):
+        self.p.ChangeDutyCycle(0)
+
+    def cleanup():
+        self.p.stop()
+
+
+class EnablerPin(object):
+    # freq = hertz (cycles/second)
+    def __init__(self, pin_number):
+        GPIO.setup(pin_number, OUT)
+        self.pin_number = pin_number
+
+    def high(self, duty_cycle):
+        GPIO.output(pin_number, HIGH)
+
+    def low(self):
+        GPIO.output(pin_number, LOW)
+
+    def cleanup():
+        GPIO.output(pin_number, LOW)
+
+
+class Wheel(object):
+    def __init__(self, pin1, pin2, enabler):
+
+        self.pin1 = pin1
+        self.pin2 = pin2
+        self.enabler = enabler
+
+        self.pin1.init()
+        self.pin2.init()
+        self.enabler.init()
+
+    # go forward at speed (0-100)
+    def forward(self, speed):
+        self.pin1.high(speed)
+        self.pin2.low()
+
+    def backward(self, speed):
+        self.pin1.low()
+        self.pin2.high(speed)
+
+    def stop(self):
+        self.pin1.low()
+        self.pin2.low()
+
+    def cleanup(self):
+        self.pin1.cleanup()
+        self.pin2.cleanup()
+
 
 class Driver(object):
+    # Create and assign all the pins
     def __init__(self):
-        # Initialize Right Front Motor
-        GPIO.setup(rf_forward, OUT)
-        GPIO.setup(rf_backward, OUT)
-        GPIO.setup(rf_pwm, OUT)
+        # Initialize Right Front Wheel
+        rff_pin = Pin(rf_forward)
+        rfb_pin = Pin(rf_backward)
+        rfe_pin = Pin(rf_enabler)
 
-        # Initialize Left Front Motor
-        GPIO.setup(lf_forward, OUT)
-        GPIO.setup(lf_backward, OUT)
-        GPIO.setup(lf_pwm, OUT)
+        rf_wheel = Wheel(rff_pin, rfb_pin, rfe_pin)
 
-        # Initialize Right Rear Motor
-        GPIO.setup(rr_forward, OUT)
-        GPIO.setup(rr_backward, OUT)
-        GPIO.setup(rr_pwm, OUT)
+        # Initialize Right Rear Wheel
+        rrf_pin = Pin(rr_forward)
+        rrb_pin = Pin(rr_backward)
+        rre_pin = Pin(rr_enabler)
 
-        # Initialize Left Rear Motor
-        GPIO.setup(lr_forward, OUT)
-        GPIO.setup(lr_backward, OUT)
-        GPIO.setup(lr_pwm, OUT)
+        rr_wheel = Wheel(rrf_pin, rrb_pin, rre_pin)
+
+        # Initialize Left Front Wheel
+        lff_pin = Pin(lf_forward)
+        lfb_pin = Pin(lf_backward)
+        lfe_pin = Pin(rf_enabler)
+
+        lf_wheel = Wheel(lff_pin, lfb_pin, lfe_pin)
+
+        # Initialize Left Rear Wheel
+        lrf_pin = Pin(lr_forward)
+        lrb_pin = Pin(lr_backward)
+        lre_pin = Pin(lr_enabler)
+
+        lr_wheel = Wheel(lrf_pin, lrb_pin, lre_pin)
 
         print "Initialized Driver Object."
 
