@@ -131,3 +131,11 @@ class Driver(object):
 
     def cleanup(self):
         GPIO.cleanup()
+
+if __name__ == "__main__":
+    d = Driver()
+    d.backward()
+    d.turn_left()
+    d.turn_right()
+    d.forward()
+    d.cleanup()
