@@ -37,7 +37,7 @@ class Pin(object):
         GPIO.setup(pin_number, OUT)
         self.p = GPIO.pwm(pin_number, freq)
 
-    def high(self, duty_cycle=50):
+    def high(self, duty_cycle):
         self.p.ChangeDutyCycle(duty_cycle)
 
     def low(self):
@@ -91,88 +91,46 @@ class Driver(object):
     # Create and assign all the pins
     def __init__(self):
         # Initialize Right Front Wheel
-        rf_wheel = Wheel(rf_forward, rf_backward, rf_enabler)
+        self.rf_wheel = Wheel(rf_forward, rf_backward, rf_enabler)
 
         # Initialize Right Rear Wheel
-        rr_wheel = Wheel(rr_forward, rr_backward, rr_enabler)
+        self.rr_wheel = Wheel(rr_forward, rr_backward, rr_enabler)
 
         # Initialize Left Front Wheel
-        lf_wheel = Wheel(lf_forward, lf_backward, lf_enabler)
+        self.lf_wheel = Wheel(lf_forward, lf_backward, lf_enabler)
 
         # Initialize Left Rear Wheel
-        lr_wheel = Wheel(lr_forward, lr_backward, lr_enabler)
+        self.lr_wheel = Wheel(lr_forward, lr_backward, lr_enabler)
 
         print "Initialized Driver Object."
 
-    def right_motor_high_forward(self, seconds):
-        print "Right motor engaged."
-        GPIO.output(rf_forward, HIGH)
-        GPIO.output(rf_backward, LOW)
-        GPIO.output(rr_forward, HIGH)
-        GPIO.output(rr_backward, LOW)
+    def right_turn(self, speed=25):
+        self.lf_wheel.forward(speed)
+        self.lr_wheel.forward(speed)
 
-        GPIO.output(rr_pwm, HIGH)
-        GPIO.output(rf_pwm, HIGH)
+        self.rr_wheel.backward(speed)
+        self.rf_wheel.backward(speed)
 
-        sleep(seconds)
+    def left_turn(self, speed=25):
+        self.lf_wheel.backward(speed)
+        self.lr_wheel.backward(speed)
 
-        GPIO.output(rf_pwm, LOW)
-        GPIO.output(rr_pwm, LOW)
+        self.rr_wheel.forward(speed)
+        self.rf_wheel.forward(speed)
 
-        print "Ran for %s seconds. " % seconds
-        print "Right motor disengaged."
+    def backward(self, speed=50):
+        self.lf_wheel.backward(speed)
+        self.lr_wheel.backward(speed)
 
-    def left_motor_high_forward(self, seconds):
-        print "Left motor engaged."
-        GPIO.output(lf_forward, HIGH)
-        GPIO.output(lf_backward, LOW)
-        GPIO.output(lr_forward, HIGH)
-        GPIO.output(lr_backward, LOW)
+        self.rr_wheel.backward(speed)
+        self.rf_wheel.backward(speed)
 
-        GPIO.output(lr_pwm, HIGH)
-        GPIO.output(lf_pwm, HIGH)
+    def forward(self, speed=50):
+        self.lf_wheel.forward(speed)
+        self.lr_wheel.forward(speed)
 
-        sleep(seconds)
-
-        GPIO.output(lf_pwm, LOW)
-        GPIO.output(lr_pwm, LOW)
-
-        print "Ran for %s seconds. " % seconds
-        print "Left motor disengaged."
-
-    def forward(self, seconds):
-        print "Forward engaged."
-        # forward pins to high
-        GPIO.output(rf_forward, HIGH)
-        GPIO.output(rr_forward, HIGH)
-
-        GPIO.output(lf_forward, HIGH)
-        GPIO.output(lr_forward, HIGH)
-
-        # back pins to low
-        GPIO.output(rf_backward, LOW)
-        GPIO.output(rr_backward, LOW)
-
-        GPIO.output(lf_backward, LOW)
-        GPIO.output(lr_backward, LOW)
-
-        # engage pwmm
-        GPIO.output(rf_pwm, HIGH)
-        GPIO.output(lf_pwm, HIGH)
-
-        GPIO.output(rr_pwm, HIGH)
-        GPIO.output(lr_pwm, HIGH)
-
-        sleep(seconds)
-
-        print "Ran for %s seconds" % seconds
-        GPIO.output(rf_pwm, LOW)
-        GPIO.output(lf_pwm, LOW)
-
-        GPIO.output(rr_pwm, LOW)
-        GPIO.output(lr_pwm, LOW)
-
-        print "Forward disengaged."
+        self.rr_wheel.forward(speed)
+        self.rf_wheel.forward(speed)
 
     def cleanup(self):
         GPIO.cleanup()
