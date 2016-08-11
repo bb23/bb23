@@ -36,6 +36,7 @@ class Pin(object):
         self.p = GPIO.PWM(pin_number, freq)
 
     def high(self, duty_cycle):
+        self.p.start(0)
         self.p.ChangeDutyCycle(duty_cycle)
 
     def low(self):
@@ -89,6 +90,7 @@ class Driver(object):
     # Create and assign all the pins
     def __init__(self):
         # self.cleanup()
+        print "initialized driver"
         # Initialize Right Front Wheel
         self.rf_wheel = Wheel(rf_forward, rf_backward, rf_enabler)
 
@@ -102,6 +104,7 @@ class Driver(object):
         self.lr_wheel = Wheel(lr_forward, lr_backward, lr_enabler)
 
     def turn_right(self, speed=25):
+        print "hit right turn"
         self.lf_wheel.forward(speed)
         self.lr_wheel.forward(speed)
 
@@ -138,4 +141,6 @@ if __name__ == "__main__":
     d.turn_left()
     d.turn_right()
     d.forward()
+    import time
+    time.sleep(5)
     d.cleanup()

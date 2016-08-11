@@ -65,11 +65,13 @@ def main():
 
             elif status == "turn_left":
                 send_command("turn_left")
+                sleep(0.5)
             elif status == "turn_right":
                 send_command("turn_right")
+                sleep(0.5)
             else:
                 send_command("forward")
-
+                sleep(0.5)
     except Exception as e:
         error_timestamp = datetime.datetime.now().strftime("%Y%m%d_%H:%M:%S.%f")
         import traceback
