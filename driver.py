@@ -1,16 +1,14 @@
 #!/usr/bin/env python
 import RPi.GPIO as GPIO
-from time import sleep
 
 GPIO.setmode(GPIO.BOARD)
-
 
 # Right front motor
 rf_forward = 18
 rf_backward = 16
 rf_enabler = 12
 
-#Right Rear Motor
+# Right Rear Motor
 rr_forward = 33
 rr_backward = 31
 rr_enabler = 29
@@ -20,15 +18,15 @@ lf_forward = 15
 lf_backward = 13
 lf_enabler = 11
 
-#left Rear Motor
+# left Rear Motor
 lr_forward = 36
 lr_backward = 37
 lr_enabler = 32
 
-
 HIGH = GPIO.HIGH
 LOW = GPIO.LOW
 OUT = GPIO.OUT
+
 
 class Pin(object):
     # freq = hertz (cycles/second)
@@ -43,7 +41,7 @@ class Pin(object):
     def low(self):
         self.p.ChangeDutyCycle(0)
 
-    def cleanup():
+    def cleanup(self):
         self.p.stop()
 
 
@@ -58,8 +56,9 @@ class EnablerPin(object):
     def low(self):
         GPIO.output(self.pin_number, LOW)
 
-    def cleanup():
+    def cleanup(self):
         GPIO.output(self.pin_number, LOW)
+
 
 class Wheel(object):
     def __init__(self, pin1, pin2, enabler):
@@ -67,7 +66,6 @@ class Wheel(object):
         self.pin1 = Pin(pin1)
         self.pin2 = Pin(pin2)
         self.enabler = EnablerPin(enabler)
-
 
     # go forward at speed (0-100)
     def forward(self, speed):
@@ -90,6 +88,7 @@ class Wheel(object):
 class Driver(object):
     # Create and assign all the pins
     def __init__(self):
+        # self.cleanup()
         # Initialize Right Front Wheel
         self.rf_wheel = Wheel(rf_forward, rf_backward, rf_enabler)
 
@@ -102,16 +101,14 @@ class Driver(object):
         # Initialize Left Rear Wheel
         self.lr_wheel = Wheel(lr_forward, lr_backward, lr_enabler)
 
-        print "Initialized Driver Object."
-
-    def right_turn(self, speed=25):
+    def turn_right(self, speed=25):
         self.lf_wheel.forward(speed)
         self.lr_wheel.forward(speed)
 
         self.rr_wheel.backward(speed)
         self.rf_wheel.backward(speed)
 
-    def left_turn(self, speed=25):
+    def turn_left(self, speed=25):
         self.lf_wheel.backward(speed)
         self.lr_wheel.backward(speed)
 
