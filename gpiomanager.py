@@ -42,7 +42,7 @@ class rGPIO(object):
         self.logger = logger
 
         logger.info("Starting GPIODaemon...")
-        self.driver = Driver(logger=logger)
+        self.driver = Driver()
 
         logger.info("Initialized driver")
 

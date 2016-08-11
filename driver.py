@@ -33,7 +33,7 @@ class Pin(object):
     def __init__(self, pin_number, freq=60):
 
         GPIO.setup(pin_number, OUT)
-        self.p = GPIO.pwm(pin_number, freq)
+        self.p = GPIO.PWM(pin_number, freq)
 
     def high(self, duty_cycle):
         self.p.ChangeDutyCycle(duty_cycle)
